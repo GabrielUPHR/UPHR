@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vietnam COGS Calculator - Corrected Tariff Flow</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            text-align: center;
+            color: #2d3748;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .alert {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            text-align: center;
+            font-weight: bold;
+        }
+        
+        .summary-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .card {
+            background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .card.negative {
+            background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%);
+        }
+        
+        .card h3 {
+            margin: 0 0 10px 0;
+            font-size: 1.1em;
+        }
+        
+        .card .value {
+            font-size: 1.8em;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        
+        .scenario-section {
+            margin: 30px 0;
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .scenario-title {
+            color: #2d3748;
+            border-bottom: 3px solid #4299e1;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+        
+        .flow-sequence {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .flow-step {
+            background: #f7fafc;
+            padding: 15px;
+            border-radius: 10px;
+            border-left: 4px solid #4299e1;
+            text-align: center;
+            position: relative;
+        }
+        
+        .flow-step::after {
+            content: '→';
+            position: absolute;
+            right: -20px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.5em;
+            color: #4299e1;
+            font-weight: bold;
+        }
+        
+        .flow-step:last-child::after {
+            display: none;
+        }
+        
+        .flow-step.vietnam {
+            border-left-color: #48bb78;
+        }
+        
+        .flow-step.customs {
+            border-left-color: #ed8936;
+        }
+        
+        .flow-step.usa {
+            border-left-color: #9f7aea;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        th, td {
+            padding: 12px;
+            text-align: center;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        th {
+            background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+            color: white;
+            font-weight: bold;
+        }
+        
+        tr:nth-child(even) {
+            background-color: #f7fafc;
+        }
+        
+        tr:hover {
+            background-color: #edf2f7;
+            transition: background-color 0.3s ease;
+        }
+        
+        .profit-positive {
+            color: #38a169;
+            font-weight: bold;
+        }
+        
+        .profit-negative {
+            color: #e53e3e;
+            font-weight: bold;
+        }
+        
+        .profit-warning {
+            color: #ed8936;
+            font-weight: bold;
+        }
+        
+        .input-section {
+            background: #edf2f7;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .input-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 15px 0;
+        }
+        
+        label {
+            font-weight: bold;
+            color: #2d3748;
+            margin-bottom: 5px;
+            display: block;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #cbd5e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+        
+        input:focus, select:focus {
+            outline: none;
+            border-color: #4299e1;
+        }
+        
+        button {
+            background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+        }
+        
+        .cost-breakdown {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .cost-item {
+            background: #f7fafc;
+            padding: 15px;
+            border-radius: 10px;
+            border-left: 4px solid #4299e1;
+        }
+        
+        .cost-item strong {
+            color: #2d3748;
+        }
+        
+        .cost-item.vietnam {
+            border-left-color: #48bb78;
+        }
+        
+        .cost-item.customs {
+            border-left-color: #ed8936;
+        }
+        
+        .cost-item.usa {
+            border-left-color: #9f7aea;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Vietnam COGS Calculator</h1>
+        <h2 style="text-align: center; color: #718096; margin-top: -20px;">Interactive Import Sequence & Pricing Calculator</h2>
+        
+        <div class="scenario-section">
+            <h2 class="scenario-title">🔄 Import Flow Sequence</h2>
+            
+            <div class="flow-sequence">
+                <div class="flow-step vietnam">
+                    <strong>🏭 Vietnam</strong><br>
+                    Manufacturing<br>
+                    <small>Base + Case + Packaging</small>
+                </div>
+                <div class="flow-step vietnam">
+                    <strong>🚢 Shipping</strong><br>
+                    Vietnam → USA<br>
+                    <small>Freight Cost</small>
+                </div>
+                <div class="flow-step customs">
+                    <strong>🛃 US Customs</strong><br>
+                    Tariff Applied<br>
+                    <small>% on CIF Value</small>
+                </div>
+                <div class="flow-step usa">
+                    <strong>📦 USA Fulfillment</strong><br>
+                    Pick, Pack, Ship<br>
+                    <small>Post-Import Cost</small>
+                </div>
+            </div>
+        </div>
+        
+        <div class="input-section">
+            <h3>🔧 Interactive COGS Calculator</h3>
+            <div class="input-group">
+                <div>
+                    <label for="baseCogs">Base COGS (Vietnam):</label>
+                    <input type="number" id="baseCogs" value="9.42" step="0.01">
+                </div>
+                <div>
+                    <label for="casePrice">Case Price:</label>
+                    <input type="number" id="casePrice" value="2.50" step="0.01">
+                </div>
+                <div>
+                    <label for="packagingCost">Packaging:</label>
+                    <input type="number" id="packagingCost" value="1.50" step="0.01">
+                </div>
+                <div>
+                    <label for="freightCost">Freight Vietnam→USA:</label>
+                    <input type="number" id="freightCost" value="3.50" step="0.01">
+                </div>
+                <div>
+                    <label for="tariffRate">Tariff Rate (%):</label>
+                    <select id="tariffRate">
+                        <option value="5.5">5.5% (Best case - normal HSC rate)</option>
+                        <option value="10">10% (Current intermediate)</option>
+                        <option value="46">46% (Worst case scenario)</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="fulfillmentCost">USA Fulfillment:</label>
+                    <input type="number" id="fulfillmentCost" value="7.00" step="0.01">
+                </div>
+            </div>
+            
+            <h4 style="margin-top: 25px; color: #2d3748;">💰 Pricing Strategy</h4>
+            <div class="input-group">
+                <div>
+                    <label for="retailPrice">Retail Price:</label>
+                    <input type="number" id="retailPrice" value="49" step="1">
+                </div>
+                <div>
+                    <label for="ksDiscount">KS Discount (%):</label>
+                    <input type="number" id="ksDiscount" value="30" step="1" min="0" max="50">
+                </div>
+                <div>
+                    <label for="tierPrice">KS Tier Price:</label>
+                    <input type="number" id="tierPrice" value="34.30" step="0.01" readonly style="background-color: #f7fafc;">
+                </div>
+                <div>
+                    <label for="targetMargin">Target Margin (%):</label>
+                    <input type="number" id="targetMargin" value="65" step="1" min="0" max="80">
+                </div>
+            </div>
+            <button onclick="calculateCosts()">🧮 Calculate All</button>
+        </div>
+        
+        <div class="summary-cards">
+            <div class="card">
+                <h3>CIF Value</h3>
+                <div class="value" id="cifValue">$16.92</div>
+                <small>Base for tariff calculation</small>
+            </div>
+            <div class="card">
+                <h3>Tariff Amount</h3>
+                <div class="value" id="tariffAmount">$0.93</div>
+                <small>Applied at US Customs</small>
+            </div>
+            <div class="card">
+                <h3>Post-Customs Cost</h3>
+                <div class="value" id="postCustoms">$17.85</div>
+                <small>After tariff, before fulfillment</small>
+            </div>
+            <div class="card">
+                <h3>KS Tier Price</h3>
+                <div class="value" id="ksTierPrice">$34.30</div>
+                <small>Retail minus discount</small>
+            </div>
+            <div class="card">
+                <h3>Total COGS</h3>
+                <div class="value" id="totalCogs">$24.85</div>
+                <small>Final delivered cost</small>
+            </div>
+            <div class="card">
+                <h3>Gross Margin</h3>
+                <div class="value" id="grossMargin">57.6%</div>
+                <small>At current tier price</small>
+            </div>
+        </div>
+        
+        <div class="scenario-section">
+            <h2 class="scenario-title">📊 Cost Breakdown by Stage</h2>
+            
+            <div class="cost-breakdown" id="costBreakdown">
+                <!-- Filled dynamically -->
+            </div>
+        </div>
+        
+        <div class="scenario-section">
+            <h2 class="scenario-title">🎯 Scenario Comparison</h2>
+            
+            <table id="scenarioTable">
+                <thead>
+                    <tr>
+                        <th>Tariff Scenario</th>
+                        <th>CIF Value</th>
+                        <th>Tariff Rate</th>
+                        <th>Tariff Amount</th>
+                        <th>Post-Customs</th>
+                        <th>USA Fulfillment</th>
+                        <th>Total COGS</th>
+                        <th>@Current Tier Margin</th>
+                        <th>Margin vs Target</th>
+                    </tr>
+                </thead>
+                <tbody id="scenarioBody">
+                    <!-- Filled dynamically -->
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="scenario-section">
+            <h2 class="scenario-title">🎯 Pricing Analysis</h2>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>Price Point</th>
+                        <th>Revenue</th>
+                        <th>COGS</th>
+                        <th>Gross Margin $</th>
+                        <th>Gross Margin %</th>
+                        <th>vs Target</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="pricingAnalysisBody">
+                    <!-- Filled dynamically -->
+                </tbody>
+            </table>
+        </div>
+            
+        <div class="scenario-section">
+            <h2 class="scenario-title">💰 Kickstarter Tiers Impact</h2>
+            
+            <table id="ksTiersTable">
+                <thead>
+                    <tr>
+                        <th>KS Tier</th>
+                        <th>Retail Price</th>
+                        <th>Tier Price</th>
+                        <th>Best Case Margin</th>
+                        <th>Current Margin (10%)</th>
+                        <th>Worst Case Margin</th>
+                        <th>Viability Status</th>
+                    </tr>
+                </thead>
+                <tbody id="ksTiersBody">
+                    <!-- Filled dynamically -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        function calculateCosts() {
+            const baseCogs = parseFloat(document.getElementById('baseCogs').value);
+            const casePrice = parseFloat(document.getElementById('casePrice').value);
+            const packagingCost = parseFloat(document.getElementById('packagingCost').value);
+            const freightCost = parseFloat(document.getElementById('freightCost').value);
+            const tariffRate = parseFloat(document.getElementById('tariffRate').value);
+            const fulfillmentCost = parseFloat(document.getElementById('fulfillmentCost').value);
+            const retailPrice = parseFloat(document.getElementById('retailPrice').value);
+            const ksDiscount = parseFloat(document.getElementById('ksDiscount').value);
+            const targetMargin = parseFloat(document.getElementById('targetMargin').value);
+            
+            // Calculate CIF value (Cost + Insurance + Freight) - base for tariff
+            const cifValue = baseCogs + casePrice + packagingCost + freightCost;
+            
+            // Calculate tariff on CIF value only
+            const tariffAmount = cifValue * (tariffRate / 100);
+            
+            // Post-customs cost (before fulfillment)
+            const postCustomsCost = cifValue + tariffAmount;
+            
+            // Total COGS (including USA fulfillment)
+            const totalCogs = postCustomsCost + fulfillmentCost;
+            
+            // Calculate KS tier price
+            const tierPrice = retailPrice * (1 - ksDiscount / 100);
+            document.getElementById('tierPrice').value = tierPrice.toFixed(2);
+            
+            // Calculate margin at tier price
+            const grossMarginDollar = tierPrice - totalCogs;
+            const grossMarginPercent = (grossMarginDollar / tierPrice) * 100;
+            
+            // Update summary cards
+            document.getElementById('cifValue').textContent = `${cifValue.toFixed(2)}`;
+            document.getElementById('tariffAmount').textContent = `${tariffAmount.toFixed(2)}`;
+            document.getElementById('postCustoms').textContent = `${postCustomsCost.toFixed(2)}`;
+            document.getElementById('ksTierPrice').textContent = `${tierPrice.toFixed(2)}`;
+            document.getElementById('totalCogs').textContent = `${totalCogs.toFixed(2)}`;
+            document.getElementById('grossMargin').textContent = `${grossMarginPercent.toFixed(1)}%`;
+            
+            // Update breakdown
+            updateCostBreakdown(baseCogs, casePrice, packagingCost, freightCost, tariffAmount, fulfillmentCost, totalCogs);
+            
+            // Update tables
+            updateScenarioTable();
+            updatePricingAnalysis();
+            updateKSTiers();
+        }
+        
+        function updatePricingAnalysis() {
+            const tbody = document.getElementById('pricingAnalysisBody');
+            const retailPrice = parseFloat(document.getElementById('retailPrice').value);
+            const ksDiscount = parseFloat(document.getElementById('ksDiscount').value);
+            const targetMargin = parseFloat(document.getElementById('targetMargin').value);
+            const tariffRate = parseFloat(document.getElementById('tariffRate').value);
+            
+            // Get current COGS
+            const baseCogs = parseFloat(document.getElementById('baseCogs').value);
+            const casePrice = parseFloat(document.getElementById('casePrice').value);
+            const packagingCost = parseFloat(document.getElementById('packagingCost').value);
+            const freightCost = parseFloat(document.getElementById('freightCost').value);
+            const fulfillmentCost = parseFloat(document.getElementById('fulfillmentCost').value);
+            
+            const cifValue = baseCogs + casePrice + packagingCost + freightCost;
+            const tariffAmount = cifValue * (tariffRate / 100);
+            const totalCogs = cifValue + tariffAmount + fulfillmentCost;
+            
+            const tierPrice = retailPrice * (1 - ksDiscount / 100);
+            
+            const pricePoints = [
+                { name: 'Current KS Tier', price: tierPrice },
+                { name: 'Retail Price', price: retailPrice },
+                { name: 'Break-even (0%)', price: totalCogs },
+                { name: `Target (${targetMargin}%)`, price: totalCogs / (1 - targetMargin / 100) }
+            ];
+            
+            tbody.innerHTML = '';
+            
+            pricePoints.forEach(point => {
+                const margin = point.price - totalCogs;
+                const marginPct = (margin / point.price) * 100;
+                const vsTarget = marginPct - targetMargin;
+                
+                const status = marginPct >= targetMargin ? 'profit-positive' : 
+                              marginPct >= targetMargin * 0.8 ? 'profit-warning' : 'profit-negative';
+                const statusText = marginPct >= targetMargin ? '✅ Target Met' : 
+                                  marginPct >= targetMargin * 0.8 ? '⚠️ Below Target' : '❌ Critical';
+                
+                const row = tbody.insertRow();
+                row.innerHTML = `
+                    <td><strong>${point.name}</strong></td>
+                    <td>${point.price.toFixed(2)}</td>
+                    <td>${totalCogs.toFixed(2)}</td>
+                    <td>${margin.toFixed(2)}</td>
+                    <td class="${status}">${marginPct.toFixed(1)}%</td>
+                    <td class="${status}">${vsTarget >= 0 ? '+' : ''}${vsTarget.toFixed(1)}pp</td>
+                    <td>${statusText}</td>
+                `;
+            });
+        }
+        
+        function updateCostBreakdown(baseCogs, casePrice, packaging, freight, tariff, fulfillment, total) {
+            const breakdown = document.getElementById('costBreakdown');
+            
+            breakdown.innerHTML = `
+                <div class="cost-item vietnam">
+                    <strong>🏭 Base COGS:</strong><br>$${baseCogs.toFixed(2)}<br>
+                    <small>Manufacturing in Vietnam</small>
+                </div>
+                <div class="cost-item vietnam">
+                    <strong>📦 Case:</strong><br>$${casePrice.toFixed(2)}<br>
+                    <small>Product case/housing</small>
+                </div>
+                <div class="cost-item vietnam">
+                    <strong>📋 Packaging:</strong><br>$${packaging.toFixed(2)}<br>
+                    <small>Export packaging</small>
+                </div>
+                <div class="cost-item vietnam">
+                    <strong>🚢 Freight:</strong><br>$${freight.toFixed(2)}<br>
+                    <small>Vietnam → USA shipping</small>
+                </div>
+                <div class="cost-item customs">
+                    <strong>🛃 Tariff:</strong><br>$${tariff.toFixed(2)}<br>
+                    <small>Applied at US Customs</small>
+                </div>
+                <div class="cost-item usa">
+                    <strong>📦 USA Fulfillment:</strong><br>$${fulfillment.toFixed(2)}<br>
+                    <small>Pick, pack, ship to customer</small>
+                </div>
+                <div class="cost-item">
+                    <strong>💰 TOTAL COGS:</strong><br>$${total.toFixed(2)}<br>
+                    <small>Complete delivered cost</small>
+                </div>
+            `;
+        }
+        
+        function updateScenarioTable() {
+            const tbody = document.getElementById('scenarioBody');
+            const baseCogs = parseFloat(document.getElementById('baseCogs').value);
+            const casePrice = parseFloat(document.getElementById('casePrice').value);
+            const packagingCost = parseFloat(document.getElementById('packagingCost').value);
+            const freightCost = parseFloat(document.getElementById('freightCost').value);
+            const fulfillmentCost = parseFloat(document.getElementById('fulfillmentCost').value);
+            
+            const scenarios = [
+                { name: 'Best Case', rate: 5.5 },
+                { name: 'Current (Intermediate)', rate: 10 },
+                { name: 'Worst Case', rate: 46 }
+            ];
+            
+            tbody.innerHTML = '';
+            
+            scenarios.forEach(scenario => {
+                const cifValue = baseCogs + casePrice + packagingCost + freightCost;
+                const tariffAmount = cifValue * (scenario.rate / 100);
+                const postCustoms = cifValue + tariffAmount;
+                const totalCogs = postCustoms + fulfillmentCost;
+                
+                // Calculate margin at tier price
+                const tierPrice = parseFloat(document.getElementById('tierPrice').value);
+                const margin = tierPrice - totalCogs;
+                const marginPct = (margin / tierPrice) * 100;
+                const targetMargin = parseFloat(document.getElementById('targetMargin').value);
+                const vsTarget = marginPct - targetMargin;
+                
+                const status = marginPct >= targetMargin ? 'profit-positive' : 
+                              marginPct >= targetMargin * 0.8 ? 'profit-warning' : 'profit-negative';
+                
+                const row = tbody.insertRow();
+                row.innerHTML = `
+                    <td><strong>${scenario.name}</strong></td>
+                    <td>${cifValue.toFixed(2)}</td>
+                    <td>${scenario.rate}%</td>
+                    <td>${tariffAmount.toFixed(2)}</td>
+                    <td>${postCustoms.toFixed(2)}</td>
+                    <td>${fulfillmentCost.toFixed(2)}</td>
+                    <td><strong>${totalCogs.toFixed(2)}</strong></td>
+                    <td class="${status}">${marginPct.toFixed(1)}%</td>
+                    <td class="${status}">${vsTarget >= 0 ? '+' : ''}${vsTarget.toFixed(1)}%</td>
+                `;
+            });
+        }
+        
+        function updateKSTiers() {
+            const tbody = document.getElementById('ksTiersBody');
+            const baseCogs = parseFloat(document.getElementById('baseCogs').value);
+            const casePrice = parseFloat(document.getElementById('casePrice').value);
+            const packagingCost = parseFloat(document.getElementById('packagingCost').value);
+            const freightCost = parseFloat(document.getElementById('freightCost').value);
+            const fulfillmentCost = parseFloat(document.getElementById('fulfillmentCost').value);
+            
+            const tiers = [
+                { name: 'Gold Rush', retail: 71, tierPrice: 42.6 },
+                { name: 'Early Bird', retail: 61, tierPrice: 42.7 },
+                { name: 'Standard', retail: 61, tierPrice: 45.75 }
+            ];
+            
+            const tariffScenarios = [5.5, 10, 46];
+            
+            tbody.innerHTML = '';
+            
+            tiers.forEach(tier => {
+                const cifValue = baseCogs + casePrice + packagingCost + freightCost;
+                
+                let margins = [];
+                tariffScenarios.forEach(rate => {
+                    const tariffAmount = cifValue * (rate / 100);
+                    const totalCogs = cifValue + tariffAmount + fulfillmentCost;
+                    const margin = tier.tierPrice - totalCogs;
+                    const marginPct = (margin / tier.tierPrice) * 100;
+                    margins.push(marginPct);
+                });
+                
+                const [bestMargin, currentMargin, worstMargin] = margins;
+                const viability = worstMargin > 30 ? '✅ Viable' : worstMargin > 15 ? '⚠️ Risk' : '❌ Critical';
+                
+                const row = tbody.insertRow();
+                row.innerHTML = `
+                    <td><strong>${tier.name}</strong></td>
+                    <td>$${tier.retail}</td>
+                    <td>$${tier.tierPrice.toFixed(2)}</td>
+                    <td class="profit-positive">${bestMargin.toFixed(1)}%</td>
+                    <td class="${currentMargin > 30 ? 'profit-positive' : currentMargin > 15 ? 'profit-warning' : 'profit-negative'}">${currentMargin.toFixed(1)}%</td>
+                    <td class="${worstMargin > 30 ? 'profit-positive' : worstMargin > 15 ? 'profit-warning' : 'profit-negative'}">${worstMargin.toFixed(1)}%</td>
+                    <td>${viability}</td>
+                `;
+            });
+        }
+        
+        // Add event listeners for automatic calculation
+        document.getElementById('retailPrice').addEventListener('input', calculateCosts);
+        document.getElementById('ksDiscount').addEventListener('input', calculateCosts);
+        document.getElementById('targetMargin').addEventListener('input', calculateCosts);
+        
+        // Initialize
+        calculateCosts();
+    </script>
+</body>
+</html>
